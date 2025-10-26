@@ -12,9 +12,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from openai import RateLimitError
 
-from vector_search_mcp.langchain.langchain_util import LangChainOpenAIClient
+from vector_search_mcp.langchain.langchain_client import LangChainOpenAIClient
 from vector_search_mcp.langchain.langchain_doc_store import SQLDocStore
-
 from vector_search_mcp.langchain.embedding_data import EmbeddingData
 
 import vector_search_mcp.log.log_settings as log_settings

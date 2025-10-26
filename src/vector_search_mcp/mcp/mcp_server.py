@@ -65,7 +65,7 @@ async def main():
                 print(f"Warning: Tool '{tool_name}' not found or not callable. Skipping registration.")
     else:
         # デフォルトのツールを登録
-        mcp.tool()(run_openai_chat_async_mcp)
+        mcp.tool()(vector_search)
 
     if mode == "stdio":
         await mcp.run_async()
