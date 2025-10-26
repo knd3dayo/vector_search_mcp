@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field, field_validator
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from vector_search_mcp.langchain.langchain_vector_db import LangChainVectorDB
-from vector_search_mcp.langchain.vector_search_request import VectorSearchRequest
 from vector_search_mcp.langchain.embedding_data import EmbeddingData
 from vector_search_mcp.langchain.langchain_vector_db_chroma import LangChainVectorDBChroma
 from vector_search_mcp.langchain.langchain_vector_db_pgvector import LangChainVectorDBPGVector
@@ -18,6 +17,23 @@ from vector_search_mcp.langchain.langchain_client import LangChainOpenAIClient
 
 import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
+
+
+class VectorSearchRequest(BaseModel):
+    name: str = Field(
+        default="default",
+        description="Name of the vector search request. This is used to identify the request in the system."
+    )
+    query: Optional[str] = Field(
+        default="",
+        description="The query string to search for in the vector database. This is the main input for the vector search."
+    )
+    model: str = Field(
+        default="text-embedding-3-small",
+        description="The model to use for vector embedding. Default is 'text-embedding-ada-002'."
+    )
+    search_kwargs: dict[str, Any] = Field(default_factory=dict)
+    vector_db_item: Optional["VectorDBItemBase"] = None
 
 
 class VectorDBItemBase(BaseModel):

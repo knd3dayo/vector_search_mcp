@@ -7,8 +7,7 @@ import argparse
 from fastmcp import FastMCP
 from pydantic import Field
 from langchain.docstore.document import Document
-from vector_search_mcp.langchain.langchain_util import LangChainUtil, LangChainOpenAIClient, VectorDBItemBase
-from vector_search_mcp.langchain.vector_search_request import VectorSearchRequest
+from vector_search_mcp.langchain.langchain_util import LangChainUtil, LangChainOpenAIClient, VectorDBItemBase, VectorSearchRequest
 mcp = FastMCP("vector_search_mcp") #type :ignore
 
 async def vector_search(
