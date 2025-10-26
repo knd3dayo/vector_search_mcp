@@ -1,0 +1,22 @@
+python-dotenv
+pydantic
+
+
+# For Langchain
+langchain==0.3.4
+langchain-openai==0.2.3
+langchain-community==0.3.3
+langchain-chroma
+langchain_postgres
+chroma-hnswlib==0.7.3
+chromadb==0.5.0
+
+
+# For MCP
+fastmcp
+
+# Personal libraries
+analyze_image_mcp@git+https://github.com/knd3dayo/analyze_image_mcp.git
+web_search_mcp@git+https://github.com/knd3dayo/web_search_mcp.git
+extract_file_mcp@git+https://github.com/knd3dayo/extract_file_mcp.git
+ai_chat_mcp@git+https://github.com/knd3dayo/ai_chat_mcp.git
