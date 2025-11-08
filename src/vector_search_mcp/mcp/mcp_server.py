@@ -7,7 +7,7 @@ import argparse
 from fastmcp import FastMCP
 from pydantic import Field
 from langchain.docstore.document import Document
-from src.vector_search_mcp.util.vector_searcher import VectorSearcher, VectorSearchRequest
+from src.vector_search_mcp.util.vector_db_client import VectorDBClient, VectorSearchRequest
 mcp = FastMCP("vector_search_mcp") #type :ignore
 
 async def vector_search(
@@ -17,12 +17,12 @@ async def vector_search(
 ) -> Annotated[list[Document], Field(description="A list of documents matching the search query.")]: 
 
     vector_search_request = VectorSearchRequest (
-        name="default",
+        vector_db_name="default",
         query=query,
         k=num_results,
         filter=filter if filter is not None else {}
     )
-    vector_searcher = VectorSearcher()
+    vector_searcher = VectorDBClient()
 
     # vector_searchを呼び出す
     results = await vector_searcher.vector_search(vector_search_request)

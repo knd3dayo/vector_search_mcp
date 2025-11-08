@@ -13,7 +13,7 @@ from vector_search_mcp.model.models import VectorDBItemBase, VectorSearchRequest
 import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
-class VectorSearcher(BaseModel):
+class VectorDBClient(BaseModel):
 
     # langchain OpenAI client
     langchain_openai_client: LangChainOpenAIClient = Field(default=LangChainOpenAIClient())
@@ -34,12 +34,16 @@ class VectorSearcher(BaseModel):
             raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
         # LangChainVectorDBを生成
-        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vectordb)
+        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vectordb.name)
         await langchain_vector_db.update_embeddings(embedding_data)
 
         return {}   
 
-    def get_vector_db(self, client: LangChainOpenAIClient, vectordb: VectorDBItemBase) -> LangChainVectorDB:
+    def get_vector_db(self, client: LangChainOpenAIClient, vector_db_name: str) -> LangChainVectorDB:
+
+        vectordb = next((db for db in self.vector_dbs if db.name == vector_db_name), None)
+        if not vectordb:
+            raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
         vector_db_url = vectordb.vector_db_url
         if vectordb.is_use_multi_vector_retriever:
@@ -76,9 +80,9 @@ class VectorSearcher(BaseModel):
 
         result_documents = []
 
-        # debug request.nameが設定されているか確認
-        if not vector_search_request.name:
-            raise ValueError("request.name is not set")
+        # debug request.vector_db_nameが設定されているか確認
+        if not vector_search_request.vector_db_name:
+            raise ValueError("request.vector_db_name is not set")
         if not vector_search_request.query:
             raise ValueError("request.query is not set")
 
@@ -88,7 +92,7 @@ class VectorSearcher(BaseModel):
         if not vectordb:
             raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
-        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vectordb)
+        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vector_db_name)
 
         # デバッグ出力
         logger.info('ベクトルDBの設定')
