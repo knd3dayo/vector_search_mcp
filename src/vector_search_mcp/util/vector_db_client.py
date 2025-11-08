@@ -34,12 +34,12 @@ class VectorDBClient(BaseModel):
             raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
         # LangChainVectorDBを生成
-        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vectordb.name)
+        langchain_vector_db = self.get_vector_db(vectordb.name)
         await langchain_vector_db.update_embeddings(embedding_data)
 
         return {}   
 
-    def get_vector_db(self, client: LangChainOpenAIClient, vector_db_name: str) -> LangChainVectorDB:
+    def get_vector_db(self, vector_db_name: str) -> LangChainVectorDB:
 
         vectordb = next((db for db in self.vector_dbs if db.name == vector_db_name), None)
         if not vectordb:
@@ -56,7 +56,7 @@ class VectorDBClient(BaseModel):
         # ベクトルDBのタイプがChromaの場合
         if vectordb.vector_db_type == 1:
             return LangChainVectorDBChroma(
-                langchain_openai_client = client,
+                langchain_openai_client = self.langchain_openai_client,
                 vector_db_url = vector_db_url,
                 collection_name = collection_name,
                 doc_store_url= doc_store_url, 
@@ -65,7 +65,7 @@ class VectorDBClient(BaseModel):
         # ベクトルDBのタイプがPostgresの場合
         elif vectordb.vector_db_type == 2:
             return LangChainVectorDBPGVector(
-                langchain_openai_client = client,
+                langchain_openai_client = self.langchain_openai_client,
                 vector_db_url = vector_db_url,
                 collection_name = collection_name,
                 doc_store_url= doc_store_url, 
@@ -92,7 +92,7 @@ class VectorDBClient(BaseModel):
         if not vectordb:
             raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
-        langchain_vector_db = self.get_vector_db(self.langchain_openai_client, vector_db_name)
+        langchain_vector_db = self.get_vector_db(vector_db_name)
 
         # デバッグ出力
         logger.info('ベクトルDBの設定')
