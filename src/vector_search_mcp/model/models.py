@@ -7,15 +7,16 @@ import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
 class EmbeddingData(BaseModel):
-    model: str
-    source_id: str
-    folder_path: str 
-    description: str = ""
     content: str
-    source_path: str = ""
-    image_url: str = ""
+    source_id: str
     vector_db_name: str = ""  # 追加: ベクトルDB名
 
+    metadata : dict[str, Any] = Field(default_factory=dict)
+    # source_path: str = ""
+    # image_url: str = ""
+    # folder_path: str 
+    # description: str = ""
+    # "source_type": 0,
 
 
 class VectorSearchRequest(BaseModel):
