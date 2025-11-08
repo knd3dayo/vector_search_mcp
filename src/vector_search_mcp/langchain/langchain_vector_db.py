@@ -1,8 +1,8 @@
 
 import uuid
 from typing import Tuple, List, Any, Union, Optional
-from collections import defaultdict
 import asyncio
+import copy
 from pydantic import BaseModel, Field, ConfigDict
 
 from langchain_core.documents import Document
@@ -121,9 +121,9 @@ class LangChainVectorDB(BaseModel):
         # ベクトルDB固有の削除メソッドを呼び出してコレクションを削除
         self._delete_collection()
 
-    async def delete_folder(self, folder_path: str):
+    async def delete_documents_by_tag(self, tag_name: str, tag_value: str):
         # ベクトルDB固有のvector id取得メソッドを呼び出し。
-        vector_ids, _ = self._get_document_ids_by_tag("folder_path", folder_path)
+        vector_ids, _ = self._get_document_ids_by_tag(tag_name, tag_value)
 
         # vector_idsが空の場合は何もしない
         if len(vector_ids) == 0:
@@ -220,16 +220,10 @@ class LangChainVectorDB(BaseModel):
 
     @classmethod
     async def create_metadata(cls, embedding_data: EmbeddingData) -> dict[str, Any]:
-        logger.info(f"folder_path:{embedding_data.folder_path}")
+        logger.info(f"metadata:{embedding_data.metadata}")
 
-        metadata = {
-            "folder_path": embedding_data.folder_path,
-            "source_path": embedding_data.source_path,
-            "description": embedding_data.description,
-            "source_id": embedding_data.source_id,
-            "source_type": 0,
-            "score": 0
-        }
+        metadata = copy.deepcopy(embedding_data.metadata)
+        metadata["score"] = 0.0
         return metadata
 
     
