@@ -7,7 +7,6 @@ import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
 class EmbeddingData(BaseModel):
-    name: str
     model: str
     source_id: str
     folder_path: str 
@@ -20,7 +19,7 @@ class EmbeddingData(BaseModel):
 
 
 class VectorSearchRequest(BaseModel):
-    name: str = Field(
+    vector_db_name: str = Field(
         default="default",
         description="Name of the vector search request. This is used to identify the request in the system."
     )
@@ -36,7 +35,6 @@ class VectorSearchRequest(BaseModel):
         default_factory=dict,
         description="Filter criteria to apply to the vector search."
     )
-    vector_db_name: Optional[str] = None
 
 class VectorDBItemBase(BaseModel):
 
