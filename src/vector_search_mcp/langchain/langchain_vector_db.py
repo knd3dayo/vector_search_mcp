@@ -14,7 +14,7 @@ from openai import RateLimitError
 
 from vector_search_mcp.langchain.langchain_client import LangChainOpenAIClient
 from vector_search_mcp.langchain.langchain_doc_store import SQLDocStore
-from vector_search_mcp.langchain.embedding_data import EmbeddingData
+from vector_search_mcp.model.models import EmbeddingData
 
 import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)

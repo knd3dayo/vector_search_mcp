@@ -1,31 +1,31 @@
 
 import os, sys
 import asyncio
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Any
 from dotenv import load_dotenv
 import argparse
 from fastmcp import FastMCP
 from pydantic import Field
 from langchain.docstore.document import Document
-from vector_search_mcp.langchain.langchain_util import LangChainUtil, LangChainOpenAIClient, VectorDBItemBase, VectorSearchRequest
+from src.vector_search_mcp.util.vector_searcher import VectorSearcher, VectorSearchRequest
 mcp = FastMCP("vector_search_mcp") #type :ignore
 
 async def vector_search(
     query: Annotated[str, Field(description="The query string to search for in the vector database.")],
     num_results: Annotated[int, Field(description="The number of results to return.", ge=1, le=100)] = 5,
-    target_folder: Annotated[Optional[str], Field(description="The target folder path to filter the search results. If not specified, search in all folders.")] = None,
+    filter: Annotated[Optional[dict[str, Any]], Field(description="Optional filter to apply to the search results.")]= {},
 ) -> Annotated[list[Document], Field(description="A list of documents matching the search query.")]: 
-    client = LangChainOpenAIClient()
-    vector_db_item = VectorDBItemBase()
 
     vector_search_request = VectorSearchRequest (
         name="default",
         query=query,
-        search_kwargs={"k": num_results, "filter": {"folder_path": target_folder}} if target_folder else {"k": num_results}
+        k=num_results,
+        filter=filter if filter is not None else {}
     )
+    vector_searcher = VectorSearcher()
 
     # vector_searchを呼び出す
-    results = await LangChainUtil.vector_search(client, vector_db_item, vector_search_request)
+    results = await vector_searcher.vector_search(vector_search_request)
     return results
 
 # 引数解析用の関数
