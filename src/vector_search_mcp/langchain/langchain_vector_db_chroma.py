@@ -8,8 +8,6 @@ from langchain_core.vectorstores import VectorStore # type: ignore
 
 from vector_search_mcp.langchain.langchain_vector_db import LangChainVectorDB
 
-from vector_search_mcp.langchain.langchain_doc_store import SQLDocStore
-
 import vector_search_mcp.log.log_settings as log_settings
 logger = log_settings.getLogger(__name__)
 
@@ -17,11 +15,6 @@ class LangChainVectorDBChroma(LangChainVectorDB):
     
     def model_post_init(self, __context: Any) -> None:
         self.db = self._load()
-
-        if self.doc_store_url:
-            self.doc_store = SQLDocStore(self.doc_store_url)
-        else:
-            logger.info("doc_store_url is None")
 
     def _load(self) -> VectorStore:
 

@@ -48,22 +48,8 @@ class VectorDBItemBase(BaseModel):
     vector_db_type: int = Field(default=1, ge=1, le=3, description="1: Chroma, 2: PGVector, 3: Other")
     vector_db_url: str = Field(default=os.path.join(os.getenv("APP_DATA_PATH", ""), "server", "vector_db", "default_vector_db"))
     collection_name: str = Field(default=DEFAULT_COLLECTION_NAME)
-    doc_store_url: str = Field(default=f'sqlite:///{os.path.join(os.getenv("APP_DATA_PATH", ""), "server", "vector_db", "default_doc_store.db")}')
     chunk_size: int = Field(default=4096)
-    is_use_multi_vector_retriever: bool = Field(default=True)
 
-
-    @field_validator("is_use_multi_vector_retriever")
-    @classmethod
-    def parse_bool_multi_vector(cls, v):
-        if isinstance(v, bool):
-            return v
-        if isinstance(v, int):
-            return bool(v)
-        if isinstance(v, str):
-            return v.upper() == "TRUE"
-        return False
-        
     def get_vector_db_type_string(self) -> str:
         '''
         vector_db_typeを文字列で返す
