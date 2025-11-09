@@ -104,7 +104,7 @@ class VectorDBClient(BaseModel):
             ''')
 
 
-        logger.info(f'Query: {vector_search_request.query}')
+        logger.info(f'query: {vector_search_request.query}')
         search_kwargs = {}
         search_kwargs["k"] = vector_search_request.k
         if vector_search_request.filter:

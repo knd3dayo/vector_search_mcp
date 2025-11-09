@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vector_search_mcp"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
     { name = "knd3dayo", email = "knd3dayo@gmail.com" }
 ]
