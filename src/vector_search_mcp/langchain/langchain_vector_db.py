@@ -221,8 +221,9 @@ class LangChainVectorDB(BaseModel):
     @classmethod
     async def create_metadata(cls, embedding_data: EmbeddingData) -> dict[str, Any]:
         logger.info(f"metadata:{embedding_data.metadata}")
-
+        # source_idをmetadataに追加
         metadata = copy.deepcopy(embedding_data.metadata)
+        metadata["source_id"] = embedding_data.source_id
         metadata["score"] = 0.0
         return metadata
 
