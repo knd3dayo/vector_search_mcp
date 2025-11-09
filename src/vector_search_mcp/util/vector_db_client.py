@@ -46,10 +46,6 @@ class VectorDBClient(BaseModel):
             raise ValueError(f"VectorDBItemBase with name {vector_db_name} not found")
 
         vector_db_url = vectordb.vector_db_url
-        if vectordb.is_use_multi_vector_retriever:
-            doc_store_url = vectordb.doc_store_url
-        else:
-            doc_store_url = ""
         collection_name = vectordb.collection_name
         chunk_size = vectordb.chunk_size
 
@@ -59,7 +55,6 @@ class VectorDBClient(BaseModel):
                 langchain_openai_client = self.langchain_openai_client,
                 vector_db_url = vector_db_url,
                 collection_name = collection_name,
-                doc_store_url= doc_store_url, 
                 chunk_size = chunk_size)
         
         # ベクトルDBのタイプがPostgresの場合
@@ -68,7 +63,6 @@ class VectorDBClient(BaseModel):
                 langchain_openai_client = self.langchain_openai_client,
                 vector_db_url = vector_db_url,
                 collection_name = collection_name,
-                doc_store_url= doc_store_url, 
                 chunk_size = chunk_size)
                 
         else:
@@ -100,7 +94,7 @@ class VectorDBClient(BaseModel):
             name:{vectordb.name} vector_db_description:{vectordb.description} 
             VectorDBTypeString:{vectordb.get_vector_db_type_string()} VectorDBURL:{vectordb.vector_db_url} 
             CollectionName:{vectordb.collection_name}
-            ChunkSize:{vectordb.chunk_size} IsUseMultiVectorRetriever:{vectordb.is_use_multi_vector_retriever}
+            ChunkSize:{vectordb.chunk_size} 
             ''')
 
 

@@ -8,12 +8,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStore
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 from openai import RateLimitError
 
 from vector_search_mcp.langchain.langchain_client import LangChainOpenAIClient
-from vector_search_mcp.langchain.langchain_doc_store import SQLDocStore
 from vector_search_mcp.model.models import EmbeddingData
 
 import vector_search_mcp.log.log_settings as log_settings
@@ -29,13 +26,11 @@ class LangChainVectorDB(BaseModel):
     collection_name: str = Field(default="", description="コレクション名")
     doc_store_url: str = Field(default="", description="MultiVectorRetrieverを利用する場合のDocStoreのURL")
     chunk_size: int = Field(default=1000, description="テキストを分割するチャンクサイズ")
-    use_multi_vector_retriever: bool = Field(default=False, description="MultiVectorRetrieverを利用するかどうか")
     parent_chunk_size: int = Field(default=4000, description="親データのチャンクサイズ(MultiVectorRetrieverを利用する場合)")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     db : Union[VectorStore, None] = Field(default=None, description="VectorStoreのインスタンス")
-    doc_store: Union[SQLDocStore, None] = Field(default=None, description="SQLDocStoreのインスタンス")
 
 
     # document_idのリストとmetadataのリストを返す
@@ -67,19 +62,9 @@ class LangChainVectorDB(BaseModel):
         page_content = self._sanitize_text(data.content)
  
         doc_id_text_list: list[tuple[str, str]] = []
-        # doc_store_urlが指定されている場合は、page_contentをparent_chunk_sizeで分割, doc_idとtextのタプルを作成
-        doc_store: Optional[SQLDocStore] = None
-        if self.doc_store_url:
-            doc_store = SQLDocStore(self.doc_store_url)
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.parent_chunk_size)
-            text_list = text_splitter.split_text(page_content)
-            for text in text_list:
-                doc_id = str(uuid.uuid4())
-                doc_id_text_list.append((doc_id, text))
-        else:
-            # doc_store_urlが指定されていない場合は、page_contentとdoc_idのタプルを作成
-            doc_id = str(uuid.uuid4())
-            doc_id_text_list.append((doc_id, page_content))
+
+        doc_id = str(uuid.uuid4())
+        doc_id_text_list.append((doc_id, page_content))
 
         # doc_id_text_listの要素をループして、Documentを作成
         for doc_id, text in doc_id_text_list:
@@ -93,12 +78,6 @@ class LangChainVectorDB(BaseModel):
                 metadata=metadata_copy
             )
             await self.add_doucment_with_retry(self.db, [document])
-
-            if doc_store is not None:
-                # doc_store_urlが指定されている場合は、doc_storeに保存
-                param = []
-                param.append((doc_id, document))
-                await doc_store.amset(param)
 
     # テキストをサニタイズする
     def _sanitize_text(self, text: str) -> str:
@@ -129,10 +108,6 @@ class LangChainVectorDB(BaseModel):
         if len(vector_ids) == 0:
             return 0
 
-        # DocStoreから削除
-        if self.doc_store_url and self.doc_store is not None:
-            await self.doc_store.amdelete(vector_ids)
-
         # ベクトルDB固有の削除メソッドを呼び出し
         await self._delete(vector_ids)
 
@@ -143,10 +118,6 @@ class LangChainVectorDB(BaseModel):
         # vector_idsが空の場合は何もしない
         if len(doc_ids) == 0:
             return 0
-
-        # DocStoreから削除
-        if self.doc_store_url and self.doc_store is not None:
-            await self.doc_store.amdelete(doc_ids)
 
         # ベクトルDB固有の削除メソッドを呼び出し
         await self._delete(doc_ids)
@@ -176,12 +147,12 @@ class LangChainVectorDB(BaseModel):
                 logger.error(f"Error adding documents: {e}")
                 break
 
-    async def vector_search(self, query: str, search_kwargs: dict, return_parent: bool = True) -> List[Document]:
+    async def vector_search(self, query: str, search_kwargs: dict) -> List[Document]:
         """
         ベクトルDBからドキュメントを検索する。
         :param query: 検索クエリ
         :param search_kwargs: 検索キーワード
-        :param return_parent: Trueの場合で、MultiVectorRetrieverを利用している場合は、親ドキュメントも返す
+        :return: 検索結果のドキュメントリスト
         """
         if self.db is None:
             raise ValueError("db is None")
@@ -197,34 +168,18 @@ class LangChainVectorDB(BaseModel):
             if doc_id is not None:
                 doc_ids.add(doc_id)
 
-        if self.doc_store_url and return_parent:
-            doc_store = SQLDocStore(self.doc_store_url)
-            # doc_store_urlが指定されている場合は、doc_storeからドキュメントを取得
-            parent_docs = await doc_store.amget(list(doc_ids))
-                                
-            result_docs: List[Document] = []
-            for parent_doc in parent_docs:
-                if isinstance(parent_doc, Document):
-                    # parent_docのmetadataにscoreを追加
-                    parent_doc.metadata["score"] = 0
-                    # documentsの中から同じdoc_idのドキュメントを探してsub_docsに追加
-                    sub_docs = [doc.model_dump() for doc in documents if doc.metadata.get("doc_id") == parent_doc.metadata.get("doc_id")]
-                    parent_doc.metadata["sub_docs"] = sub_docs
-                    # parent_docをresult_docsに追加
-                    result_docs.append(parent_doc)
-
-            # result_docsを返す
-            return result_docs
-        else:
-            return documents
+        return documents
 
     @classmethod
     async def create_metadata(cls, embedding_data: EmbeddingData) -> dict[str, Any]:
-        logger.info(f"metadata:{embedding_data.metadata}")
-        # source_idをmetadataに追加
+        # source_idとcontentをmetadataに追加
         metadata = copy.deepcopy(embedding_data.metadata)
         metadata["source_id"] = embedding_data.source_id
+        metadata["content"] = embedding_data.content
         metadata["score"] = 0.0
+
+        logger.info(f"metadata:{embedding_data.metadata}")
+
         return metadata
 
     
